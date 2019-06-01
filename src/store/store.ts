@@ -15,7 +15,7 @@ export abstract class Store<T> {
   abstract select<K extends keyof T>(key: K): Observable<T[K]>;
   abstract select<U>(selectorFn: (state: T) => U): Observable<U>;
 
-  abstract run(task: (state: T) => void): void;
+  abstract run<R>(task: (state: T) => R): R;
 
   abstract update<K extends keyof T>(key: K, value: T[K]): void;
 
@@ -65,8 +65,8 @@ export class RootStore<T> extends Store<T> {
     return typeof arg === 'string';
   }
 
-  run(task: (state: T) => void): void {
-    task(this.state);
+  run<R>(task: (state: T) => R): R {
+    return task(this.state);
   }
 
   update<K extends keyof T>(key: K, value: T[K]): void {
@@ -133,10 +133,10 @@ export class ChildStore<T, P extends { [U in PK]: T }, PK extends keyof P> exten
     });
   }
 
-  run(task: (state: T) => void): void {
-    this.parent.run(parentState => {
+  run<R>(task: (state: T) => R): R {
+    return this.parent.run(parentState => {
       const state = parentState[this.key];
-      task(state);
+      return task(state);
     });
   }
 
